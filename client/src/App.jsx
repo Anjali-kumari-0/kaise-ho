@@ -93,7 +93,7 @@ function App() {
   return (
     <div className="app">
       <BrowserRouter>
-        {loading ? (
+        {loading ? ( 
           <div className="app-loading-indicator">Loading...</div>
         ) : (
           <Routes>
