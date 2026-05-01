@@ -9,6 +9,8 @@ import { LOGIN_ROUTE, SIGNUP_ROUTE } from "../../utils/constants";
 const AuthPage = () => {
   const navigate = useNavigate();
   const { setUserInfo, setActiveIcon } = useAppStore();
+  const [signUpLoader, setSignUpLoader] = useState(false);
+  const [loginLoader, setLoginLoader] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +46,11 @@ const AuthPage = () => {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    if (validateLogin()) {
+    if (!validateLogin()) return;
+
+    setLoginLoader(true);
+
+    try {
       const response = await apiClient.post(
         LOGIN_ROUTE,
         {
@@ -64,29 +70,51 @@ const AuthPage = () => {
       }
 
       toast.success("Login successful");
+    
+    } catch (error) {
+      const message = error?.response?.data?.message || error?.message || "Login failed";
+      toast.error(message);
+
+    } finally {
+      setLoginLoader(false);
     }
   };
 
   const handleSignup = async (event) => {
-    event.preventDefault();
-    if (validateSignup()) {
-      console.log("validation successful");
-      const response = await apiClient.post(
-        SIGNUP_ROUTE,
-        {
-          email,
-          password,
-        },
-        { withCredentials: true }
-      );
-      if (response.status === 201) {
-        setUserInfo(response.data.user);
-        navigate("/profile");
-      }
+  event.preventDefault();   // ✅ always first
 
+  if (!validateSignup()) return;  // ✅ early return
+
+  setSignUpLoader(true);
+
+  try {
+    const response = await apiClient.post(
+      SIGNUP_ROUTE,
+      { email, password },
+      { withCredentials: true }
+    );
+
+    if (response.status === 201) {
+      setUserInfo(response.data.user);
+      navigate("/profile");
       toast.success("Signup successful");
     }
-  };
+
+  } catch (error) {
+
+    // ✅ strong error handling
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Signup failed";
+
+    toast.error(message);
+  } finally {
+    setSignUpLoader(false);
+  }
+};
+
+  
 
   const containerRef = useRef(null);
   const signUpButtonRef = useRef(null);
@@ -160,7 +188,7 @@ const AuthPage = () => {
                   : "disabled-auth-button"
               }
             >
-              Sign Up
+              {signUpLoader ? "Signing Up..." : "Sign Up"}
             </button>
           </form>
         </div>
@@ -200,7 +228,7 @@ const AuthPage = () => {
                 email.length && password.length ? "" : "disabled-auth-button"
               }
             >
-              Sign In
+              {loginLoader ? "Signing In..." : "Sign In"}
             </button>
           </form>
         </div>

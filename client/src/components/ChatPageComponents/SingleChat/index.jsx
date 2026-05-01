@@ -4,6 +4,7 @@ import SingleChatMessageBar from "../SingleChatMessageBar";
 import SingleChatMessageContainer from "../SingleChatMessageContainer";
 import ResetApp from "../ResetApp";
 import "./SingleChat.css";
+import WelcomeBanner from "../Landing/WelcomeBanner";
 
 const SingleChat = () => {
   const { selectedChatType, userInfo } = useAppStore();
@@ -18,7 +19,7 @@ const SingleChat = () => {
         </>
       ) : userInfo.isAdmin ? (
         <ResetApp />
-      ) : null}
+      ) : <WelcomeBanner />}
     </div>
   );
 };
