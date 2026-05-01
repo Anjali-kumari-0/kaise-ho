@@ -91,8 +91,11 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <BrowserRouter>
+  <div className="app">
+    <BrowserRouter>
+      {loading ? (
+        <div className="app-loading-indicator">Loading...</div>
+      ) : (
         <Routes>
           <Route
             path="/auth"
@@ -120,11 +123,12 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/auth" />} />
         </Routes>
-      </BrowserRouter>
+      )}
+    </BrowserRouter>
 
-      <Notification />
-    </div>
-  );
+    <Notification />
+  </div>
+);
 }
 
 export default App;
