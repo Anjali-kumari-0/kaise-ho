@@ -91,44 +91,44 @@ function App() {
   }
 
   return (
-  <div className="app">
-    <BrowserRouter>
-      {loading ? (
-        <div className="app-loading-indicator">Loading...</div>
-      ) : (
-        <Routes>
-          <Route
-            path="/auth"
-            element={
-              <AuthRoute>
-                <AuthPage />
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <ChatRoute>
-                <ChatPage />
-              </ChatRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProfileLandingRoute>
-                <ProfileLandingPage />
-              </ProfileLandingRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/auth" />} />
-        </Routes>
-      )}
-    </BrowserRouter>
+    <div className="app">
+      <BrowserRouter>
+        {loading ? (
+          <div className="app-loading-indicator">Loading...</div>
+        ) : (
+          <Routes>
+            <Route
+              path="/auth"
+              element={
+                <AuthRoute>
+                  <AuthPage />
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ChatRoute>
+                  <ChatPage />
+                </ChatRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProfileLandingRoute>
+                  <ProfileLandingPage />
+                </ProfileLandingRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/auth" />} />
+          </Routes>
+        )}
+      </BrowserRouter>
 
-    <Notification />
-  </div>
-);
+      <Notification />
+    </div>
+  );
 }
 
 export default App;
