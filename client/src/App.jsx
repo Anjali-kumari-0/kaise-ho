@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
-import ChatPage from "./pages/ChatPage";
+import Chatpage from "./pages/Chatpage";
 import ProfileLandingPage from "./pages/ProfileLandingPage";
 import Notification from "./components/Notification";
 import "./App.css";
@@ -110,7 +110,7 @@ function App() {
               path="/chat"
               element={
                 <ChatRoute>
-                  <ChatPage />
+                  <Chatpage />
                 </ChatRoute>
               }
             />

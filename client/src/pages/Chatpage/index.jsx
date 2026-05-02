@@ -7,7 +7,7 @@ import "./ChatPage.css";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const ChatPage = () => {
+const Chatpage = () => {
   const {
     userInfo,
     setSelectedChatData,
