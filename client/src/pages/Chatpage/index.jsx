@@ -49,4 +49,4 @@ const Chatpage = () => {
   );
 };
 
-export default ChatPage;
+export default Chatpage;
