@@ -1,11 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
-import ChatPage from "./pages/Chatpage";
+import ChatPage from "./pages/ChatPage";
 import ProfileLandingPage from "./pages/ProfileLandingPage";
 import Notification from "./components/Notification";
 import "./App.css";
 import { useAppStore } from "./store";
-import { useEffect, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { apiClient } from "./lib/api-client";
 import { GET_USER_INFO_ROUTE } from "./utils/constants";
 import { toast } from "react-toastify";
@@ -92,6 +92,7 @@ function App() {
 
   return (
     <div className="app">
+      <StrictMode>
       <BrowserRouter>
         {loading ? ( 
           <div className="app-loading-indicator">Loading...</div>
@@ -127,6 +128,7 @@ function App() {
       </BrowserRouter>
 
       <Notification />
+      </StrictMode>
     </div>
   );
 }
