@@ -1,6 +1,6 @@
 // DemoAccess.tsx
 import { Mail, Lock } from "lucide-react";
-import "./demoAccess.css";
+import "./DemoAccess.css";
 
 const DemoAccess = () => {
   return (
