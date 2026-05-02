@@ -6,6 +6,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+
 }
 
 .auth-page h1 {
@@ -18,7 +20,7 @@
   margin-bottom: 20px;
 }
 
-.auth-page p {
+.auth-page .p {
   font-size: 14px;
   font-weight: 100;
   line-height: 20px;
@@ -33,7 +35,7 @@
 .auth-page .forgot-password-link {
   /* color: #333; */
   color: #aaa;
-  font-size: 14px;
+  font-size: 10px;
   text-decoration: underline;
   margin: 15px 0;
 }
@@ -44,9 +46,9 @@
   border: 1px solid #ff4b2b;
   background-color: #ff4b2b;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
-  padding: 12px 45px;
+  padding: 10px 30px;
   letter-spacing: 1px;
   text-transform: uppercase;
   transition: transform 80ms ease-in;
@@ -83,7 +85,7 @@
 .auth-page input {
   background-color: #eee;
   border: none;
-  padding: 12px 15px;
+  padding: 10px 13px;
   margin: 8px 0;
   width: 100%;
 }
@@ -92,9 +94,9 @@
   background-color: #111b21;
   position: relative;
   overflow: hidden;
-  width: 768px;
+  width: 668px;
   max-width: 100%;
-  min-height: 480px;
+  min-height: 380px;
 }
 
 .auth-page .form-container {

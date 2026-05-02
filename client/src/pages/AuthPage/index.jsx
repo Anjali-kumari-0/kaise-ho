@@ -5,6 +5,8 @@ import { useAppStore } from "../../store";
 import { toast } from "react-toastify";
 import { apiClient } from "../../lib/api-client";
 import { LOGIN_ROUTE, SIGNUP_ROUTE } from "../../utils/constants";
+import DemoAccess from "./DemoAccess";
+import Footer from "./PortfolioFooter";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -149,24 +151,13 @@ const AuthPage = () => {
         <div className="form-container sign-up-container">
           <form onSubmit={handleSignup}>
             <h1 className="sign-up-heading">Sign up</h1>
-            {/* <div className="social-container">
-              <a href="#" className="social">
-                <i className="fab fa-facebook-f"></i>
-              </a>
-              <a href="#" className="social">
-                <i className="fab fa-google-plus-g"></i>
-              </a>
-              <a href="#" className="social">
-                <i className="fab fa-linkedin-in"></i>
-              </a>
-            </div>
-            <span>or use your email for registration</span> */}
             {/* <input type="text" placeholder="Name" /> */}
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className=""
             />
             <input
               type="password"
@@ -195,23 +186,12 @@ const AuthPage = () => {
         <div className="form-container sign-in-container">
           <form onSubmit={handleLogin}>
             <h1 className="sign-in-heading">Sign in</h1>
-            {/* <div className="social-container">
-              <a href="#" className="social">
-                <i className="fab fa-facebook-f"></i>
-              </a>
-              <a href="#" className="social">
-                <i className="fab fa-google-plus-g"></i>
-              </a>
-              <a href="#" className="social">
-                <i className="fab fa-linkedin-in"></i>
-              </a>
-            </div>
-            <span>or use your account</span> */}
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="text-gray-700"
             />
             <input
               type="password"
@@ -219,6 +199,7 @@ const AuthPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <div className="flex-between">
             <a href="#" className="forgot-password-link">
               Forgot your password?
             </a>
@@ -230,13 +211,15 @@ const AuthPage = () => {
             >
               {loginLoader ? "Signing In..." : "Sign In"}
             </button>
+            </div>
+            <DemoAccess /> 
           </form>
         </div>
         <div className="overlay-container">
           <div className="overlay">
             <div className="overlay-panel overlay-left">
               <h1>Welcome Back!</h1>
-              <p>
+              <p className="p">
                 Already have an account? Please login with your personal info.
               </p>
               <button className="ghost" ref={signInButtonRef}>
@@ -245,14 +228,16 @@ const AuthPage = () => {
             </div>
             <div className="overlay-panel overlay-right">
               <h1>Hello!</h1>
-              <p>{"Don't"} have an account? Create one!</p>
+              <p className="p">{"Don't"} have an account? Create one!</p>
               <button className="ghost" ref={signUpButtonRef}>
                 Sign Up
               </button>
+              
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
