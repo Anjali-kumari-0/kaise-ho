@@ -20,7 +20,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://kaise-ho-git-dev-anjalirajwar101-1740s-projects.vercel.app", // 👈 IMPORTANT
+      "https://kaise-ho-git-dev-anjalirajwar101-1740s-projects.vercel.app", 
     ],
     credentials: true,
   })

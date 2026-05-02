@@ -1,17 +1,18 @@
 import jwt from "jsonwebtoken";
 
-export const verifyToken = (request, response, next) => {
-  const token = request.cookies.jwt;
+export const verifyToken = (req, res, next) => {
+  const token = req.cookies.jwt;
 
   if (!token) {
-    return response.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized - No token" });
   }
 
-  jwt.verify(token, process.env.JWT_KEY, async (error, payload) => {
-    if (error) {
-      return response.status(403).json({ error: "Token is invalid" });
-    }
-    request.userId = payload.userId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+
+    req.userId = decoded.userId;
     next();
-  });
+  } catch (err) {
+    return res.status(403).json({ error: "Token is invalid" });
+  }
 };

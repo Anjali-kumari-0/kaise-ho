@@ -41,7 +41,8 @@ export const signup = async (request, response, next) => {
       maxAge,
       secure: true,
       sameSite: "None",
-      httpOnly: true
+      httpOnly: true,
+      path: "/",
     });
     return response.status(201).json({
       user: {
@@ -83,7 +84,8 @@ export const login = async (request, response, next) => {
       maxAge,
       secure: true,
       sameSite: "None",
-      httpOnly: true
+      httpOnly: true,
+      path: "/",
     });
     return response.status(200).json({
       user: {
@@ -219,7 +221,8 @@ export const logout = async (request, response, next) => {
       maxAge: 1,
       secure: true,
       sameSite: "None",
-      httpOnly: true
+      httpOnly: true,
+      path: "/",
     });
 
     return response.status(200).json({
