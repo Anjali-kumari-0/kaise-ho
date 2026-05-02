@@ -18,6 +18,15 @@ const databaseURL = process.env.DATABASE_URL;
 
 app.use(
   cors({
+    origin: [
+      "http://localhost:5173",
+      "https://kaise-ho-git-dev-anjalirajwar101-1740s-projects.vercel.app", // 👈 IMPORTANT
+    ],
+    credentials: true,
+  })
+);
+app.use(
+  cors({
     origin: [process.env.ORIGIN],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
