@@ -21,13 +21,16 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://kaise-ho-git-dev-anjalirajwar101-1740s-projects.vercel.app", 
+      "https://kaiseho-ui.web.app"
     ],
     credentials: true,
   })
 );
 app.use(
   cors({
-    origin: [process.env.ORIGIN],
+    origin: [process.env.ORIGIN,
+      "https://kaiseho-ui.web.app/auth",
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
