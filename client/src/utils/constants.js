@@ -35,3 +35,10 @@ export const GET_GROUP_MESSAGES_ROUTE = `${GROUP_ROUTES}/get-group-messages`;
 export const GET_GROUP_MEMBERS_ROUTE = `${GROUP_ROUTES}/get-group-members`;
 export const SEARCH_GROUPS_ROUTE = `${GROUP_ROUTES}/search-groups`;
 export const GET_GROUP_FILES_ROUTE = `${GROUP_ROUTES}/get-group-files`;
+
+// Delete 
+export const DELETE_MESSAGE_ROUTE = `${MESSAGES_ROUTES}/delete-for-me`;
+export const DELETE_MESSAGE_FOR_EVERYONE_ROUTE = `${MESSAGES_ROUTES}/delete-for-everyone`;
+
+//files
+export const UPLOAD_FILE_ROUTE = `${MESSAGES_ROUTES}/upload`;

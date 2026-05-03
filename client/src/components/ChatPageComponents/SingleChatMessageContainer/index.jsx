@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./SingleChatMessageContainer.css";
 import { useAppStore } from "../../../store";
 import { apiClient } from "../../../lib/api-client";
+import { useSocket } from "../../../context/SocketContext";
 import {
+  DELETE_MESSAGE_FOR_EVERYONE_ROUTE,
+  DELETE_MESSAGE_ROUTE,
   GET_ALL_MESSAGES_ROUTE,
   GET_GROUP_MESSAGES_ROUTE,
 } from "../../../utils/constants";
@@ -13,12 +16,16 @@ import { IoMdArrowRoundDown } from "react-icons/io";
 import { PiClockFill } from "react-icons/pi";
 import { getColor } from "../../../lib/group-member-color";
 import ScrollToBottom from "../ScrollToBottom/scrollToBottom";
+import { toast } from "react-toastify";
 
 const SingleChatMessageContainer = () => {
+  const socket = useSocket();
   const messageContainerRef = useRef();
   const scrollRef = useRef();
   const scrollProgressRef = useRef();
   const placeholderMessageRef = useRef();
+  const [allDeletedForMe, setAllDeletedForMe] = useState([]);
+  const [allDeletedForEveryone, setAllDeletedForEveryone] = useState([]);
 
   const {
     selectedChatType,
@@ -79,6 +86,23 @@ const SingleChatMessageContainer = () => {
     }
   }, [selectedChatData, selectedChatType, setSelectedChatMessages]);
 
+
+  const handleDeleteForEveryone = async (messageId) => {
+    try {
+      const t=await apiClient.post(DELETE_MESSAGE_FOR_EVERYONE_ROUTE, {
+        messageId,
+      });
+
+      socket.emit("deleteMessageForEveryone", {
+        messageId,
+        userId: userInfo.id,
+      });
+      setAllDeletedForEveryone((prev) => [...prev, messageId]);
+      toast.success("Message deleted for everyone");
+    } catch (error) {
+      toast.error("Failed to delete message for everyone");
+    }
+  };
   // useEffect(() => {
   //   if (scrollRef.current) {
   //     scrollRef.current.scrollIntoView({ behavior: "instant" });
@@ -122,47 +146,48 @@ const SingleChatMessageContainer = () => {
     // Test the cleaned path
     return imageRegex.test(pathWithoutParams);
   };
+ const handleDeleteForMe = useCallback(async (messageId) => {
+    try {
+      const res = await apiClient.post(DELETE_MESSAGE_ROUTE, { messageId });
 
+      if (res.data.success) {
+        setAllDeletedForMe((prev) => [...prev, messageId]);
+        toast.success("Message deleted for you");
+      }
+    } catch (error) {
+      toast.error("Failed to delete message for you");
+    }
+  }, [apiClient, DELETE_MESSAGE_ROUTE, setSelectedChatMessages]);
   const renderMessages = () => {
     let lastDate = null;
-    return selectedChatMessages.map((message, index) => {
-      const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
+    if (!Array.isArray(selectedChatMessages)) return null;
+    return selectedChatMessages.map((message) => {
+      if (message.deletedForMe || allDeletedForMe.includes(message._id))
+        return null;
 
+      const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
       const showDate = messageDate !== lastDate;
 
-      const isMessageDateToday =
-        moment(Date.now()).format("YYYY-MM-DD") ===
-        moment(message.timestamp).format("YYYY-MM-DD");
-      const isMessageDateYesterday =
-        moment(Date.now()).subtract(1, "days").format("YYYY-MM-DD") ===
-        moment(message.timestamp).format("YYYY-MM-DD");
-      const isMessageDateThisWeekExceptTodayAndYesterday =
-        moment(Date.now()).subtract(2, "days").format("YYYY-MM-DD") ===
-          moment(message.timestamp).format("YYYY-MM-DD") ||
-        moment(Date.now()).subtract(3, "days").format("YYYY-MM-DD") ===
-          moment(message.timestamp).format("YYYY-MM-DD") ||
-        moment(Date.now()).subtract(4, "days").format("YYYY-MM-DD") ===
-          moment(message.timestamp).format("YYYY-MM-DD") ||
-        moment(Date.now()).subtract(5, "days").format("YYYY-MM-DD") ===
-          moment(message.timestamp).format("YYYY-MM-DD") ||
-        moment(Date.now()).subtract(6, "days").format("YYYY-MM-DD") ===
-          moment(message.timestamp).format("YYYY-MM-DD");
+      const isToday = moment().format("YYYY-MM-DD") === messageDate;
+
+      const isYesterday =
+        moment().subtract(1, "days").format("YYYY-MM-DD") === messageDate;
+
+      const isThisWeek = moment().diff(moment(message.timestamp), "days") < 7;
 
       lastDate = messageDate;
 
-      // console.log("showDate: " + showDate);
-
       return (
-        <div key={index}>
+        <div key={message._id}>
           {showDate && (
             <div className="general-date-container">
               <div className="general-date-line left"></div>
               <div className="general-date">
-                {isMessageDateToday
+                {isToday
                   ? "Today"
-                  : isMessageDateYesterday
+                  : isYesterday
                   ? "Yesterday"
-                  : isMessageDateThisWeekExceptTodayAndYesterday
+                  : isThisWeek
                   ? moment(message.timestamp).format("dddd")
                   : moment(message.timestamp).format("L")}
               </div>
@@ -224,78 +249,102 @@ const SingleChatMessageContainer = () => {
       : cleanFileName;
   };
 
-  const renderDMMessages = (message) => (
-    <div
-      className={`message ${
-        message.sender === selectedChatData._id
-          ? "contact-message"
-          : "own-message"
-      }`}
-    >
+  const renderDMMessages = (message) => {
+  const isDeleted =
+    message.isDeletedForEveryone ||
+    allDeletedForEveryone.includes(message._id);
+
+  const isOwn = message.sender === userInfo.id;
+
+  return (
+    <div className={`message ${isOwn ? "own-message" : "contact-message"}`}>
       <div
         className={`${
-          message.sender !== selectedChatData._id
-            ? "own-message-content"
-            : "contact-message-content"
+          isOwn ? "own-message-content" : "contact-message-content"
         } message-content`}
       >
         <div className="user-pointer">
           <MdChatBubble className="user-pointer-icon" />
         </div>
-        {message.messageType === "text" && message.content}
-        {message.messageType === "file" && message.fileUrl && (
-          <div>
-            {checkIfImage(message.fileUrl) ? (
-              <div
-                className="image-container"
-                onClick={() => {
-                  setShowImage(true);
-                  setImageURL(message.fileUrl);
-                }}
-              >
-                <img
-                  src={message.fileUrl}
-                  alt=""
-                  style={{
-                    width: "12.5rem",
-                    height: "12.5rem",
-                    // objectFit: "contain",
-                    objectFit: "cover",
-                    borderRadius: "10px",
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="file-container">
-                <div className="file-icon-container">
-                  <MdFolderZip className="file-icon" />
-                </div>
-                <div className="file-name">
-                  {getFileNameFromUrl(
-                    message.fileUrl.split("?")[0].split("/").pop()
+
+        {/* ✅ DELETED */}
+        {isDeleted ? (
+          <i>This message was deleted</i>
+        ) : (
+          <>
+            {/* TEXT */}
+            {message.messageType === "text" && message.content}
+
+            {/* FILE */}
+            {message.messageType === "file" &&
+              message.fileUrl && (
+                <div>
+                  {checkIfImage(message.fileUrl) ? (
+                    <div
+                      className="image-container"
+                      onClick={() => {
+                        setShowImage(true);
+                        setImageURL(message.fileUrl);
+                      }}
+                    >
+                      <img
+                        src={message.fileUrl}
+                        alt="chat-file"
+                        style={{
+                          width: "12.5rem",
+                          height: "12.5rem",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="file-container">
+                      <div className="file-icon-container">
+                        <MdFolderZip className="file-icon" />
+                      </div>
+
+                      <div className="file-name">
+                        {getFileNameFromUrl(
+                          message.fileUrl.split("?")[0].split("/").pop()
+                        )}
+                      </div>
+
+                      <div className="download-icon-container-link">
+                        <a
+                          onClick={() =>
+                            handleDownload(message.fileUrl)
+                          }
+                        >
+                          <IoMdArrowRoundDown className="download-icon" />
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <div className="download-icon-container-link">
-                  <a
-                    className="download-icon-container"
-                    onClick={() => handleDownload(message.fileUrl)}
-                  >
-                    <IoMdArrowRoundDown className="download-icon" />
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+          </>
         )}
-        <div
-          className={`${
-            message.messageType === "file" && checkIfImage(message.fileUrl)
-              ? "image-timestamp"
-              : message.messageType === "file" && !checkIfImage(message.fileUrl)
-              ? "file-timestamp"
-              : ""
-          } timestamp-container`}
-        >
+
+        {/* ACTIONS */}
+        <div className="message-actions">
+          <button onClick={() => handleDeleteForMe(message._id)}>
+            Delete for me
+          </button>
+
+          {isOwn && !isDeleted && (
+            <button
+              onClick={() =>
+                handleDeleteForEveryone(message._id)
+              }
+            >
+              Delete for everyone
+            </button>
+          )}
+        </div>
+
+        {/* TIMESTAMP */}
+        <div className="timestamp-container">
           <div className="message-timestamp">
             {moment(message.timestamp).format("LT")}
           </div>
@@ -303,6 +352,7 @@ const SingleChatMessageContainer = () => {
       </div>
     </div>
   );
+};
   const renderGroupMessages = (message) => (
     <div
       className={`message group-message ${

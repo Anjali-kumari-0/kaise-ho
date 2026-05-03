@@ -121,6 +121,28 @@ const setupSocket = (server) => {
       });
     }
   };
+  const deleteMessage = async ({ messageId, userId }) => {
+    const message = await Message.findById(messageId);
+
+    if (!message) return;
+
+    // ✅ Only sender allowed
+    if (message.sender.toString() !== userId) return;
+
+    message.isDeletedForEveryone = true;
+    await message.save();
+
+    const senderSocketId = userSocketMap.get(message.sender.toString());
+    const recipientSocketId = userSocketMap.get(message.recipient?.toString());
+
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("messageDeleted", { messageId });
+    }
+
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("messageDeleted", { messageId });
+    }
+  };
 
   io.on("connection", (socket) => {
     console.log(`Socket ${socket.id} connected.`);
@@ -139,6 +161,7 @@ const setupSocket = (server) => {
     socket.on("createGroup", createGroup);
 
     socket.on("disconnect", () => disconnect(socket));
+    socket.on("deleteMessageForEveryone", deleteMessage);
   });
 };
 

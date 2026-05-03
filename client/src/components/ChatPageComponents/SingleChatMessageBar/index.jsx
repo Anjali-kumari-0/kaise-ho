@@ -8,6 +8,10 @@ import "./SingleChatMessageBar.css";
 import { useAppStore } from "../../../store";
 import { useSocket } from "../../../context/SocketContext";
 import upload from "../../../lib/upload";
+import { FaCross } from "react-icons/fa";
+import { MdCancel } from "react-icons/md";
+import { UPLOAD_FILE_ROUTE } from "../../../utils/constants";
+import { apiClient } from "../../../lib/api-client";
 
 const SingleChatMessageBar = () => {
   //   const emojiRef = useRef();
@@ -27,6 +31,8 @@ const SingleChatMessageBar = () => {
   } = useAppStore();
 
   const [message, setMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   //   useEffect(() => {
   //     function handleClickOutside(event) {
@@ -53,30 +59,62 @@ const SingleChatMessageBar = () => {
   }, [selectedChatData]);
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    // if (!message.trim()) return;
 
     // console.log(message);
-    if (selectedChatType === "contact") {
-      socket.emit("sendMessage", {
-        sender: userInfo.id,
-        content: message,
-        recipient: selectedChatData._id,
-        messageType: "text",
-        fileUrl: undefined,
-      });
-    } else if (selectedChatType === "group") {
-      socket.emit("sendGroupMessage", {
-        sender: userInfo.id,
-        content: message,
-        messageType: "text",
-        fileUrl: undefined,
-        groupId: selectedChatData._id,
-      });
+    if (message.trim()) {
+      if (selectedChatType === "contact") {
+        socket.emit("sendMessage", {
+          sender: userInfo.id,
+          content: message,
+          recipient: selectedChatData._id,
+          messageType: "text",
+          fileUrl: undefined,
+        });
+      } else if (selectedChatType === "group") {
+        socket.emit("sendGroupMessage", {
+          sender: userInfo.id,
+          content: message,
+          messageType: "text",
+          fileUrl: undefined,
+          groupId: selectedChatData._id,
+        });
+      }
+      setActiveChatId(selectedChatData._id);
+      setPlaceholderMessage(message);
+      setMessage("");
+      setRefreshChatList(true);
+    } else {
+      // FILE MESSAGE
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const res = await apiClient.post(UPLOAD_FILE_ROUTE, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        const fileUrl = res.data.fileUrl;
+
+        socket.emit("sendMessage", {
+          sender: userInfo.id,
+          recipient: selectedChatData._id,
+          messageType: "file",
+          fileUrl,
+        });
+
+        // clear state
+        setSelectedFile(null);
+        setPreview(null);
+
+        // reset input (IMPORTANT)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
     }
-    setActiveChatId(selectedChatData._id);
-    setPlaceholderMessage(message);
-    setMessage("");
-    setRefreshChatList(true);
   };
 
   const handleKeyDown = (e) => {
@@ -91,51 +129,63 @@ const SingleChatMessageBar = () => {
       fileInputRef.current.click();
     }
   };
-  const handleFileAttachmentChange = async (event) => {
-    let fileUrl = null;
+  const handleFileAttachmentChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    try {
-      const file = event.target.files[0];
-
-      // alert if file size exceeds 10MB
-      if (file.size > 10 * 1024 * 1024) {
-        alert("File size exceeds 10MB");
-        return;
-      }
-      // console.log("file:");
-      // console.log(file);
-
-      if (file) {
-        // setShowFileUploadPlaceholder(true);
-
-        fileUrl = await upload(file, selectedChatData._id);
-
-        if (fileUrl) {
-          if (selectedChatType === "contact") {
-            socket.emit("sendMessage", {
-              sender: userInfo.id,
-              content: undefined,
-              recipient: selectedChatData._id,
-              messageType: "file",
-              fileUrl: fileUrl,
-            });
-          } else if (selectedChatType === "group") {
-            socket.emit("sendGroupMessage", {
-              sender: userInfo.id,
-              content: undefined,
-              messageType: "file",
-              fileUrl: fileUrl,
-              groupId: selectedChatData._id,
-            });
-          }
-
-          // setShowFileUploadPlaceholder(true);
-        }
-      }
-    } catch (error) {
-      console.log(error);
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size exceeds 10MB");
+      return;
     }
+
+    setSelectedFile(file);
+
+    const previewURL = URL.createObjectURL(file);
+    setPreview(previewURL);
   };
+  //   const handleFileAttachmentChange = async (event) => {
+  //   const file = event.target.files[0];
+
+  //   if (!file) return;
+
+  //   // ❗ preview show immediately
+  //   const previewURL = URL.createObjectURL(file);
+  //   setPreview(previewURL);
+
+  //   try {
+  //     if (file.size > 10 * 1024 * 1024) {
+  //       alert("File size exceeds 10MB");
+  //       return;
+  //     }
+
+  //     const fileUrl = await upload(file, selectedChatData._id);
+
+  //     if (fileUrl) {
+  //       if (selectedChatType === "contact") {
+  //         socket.emit("sendMessage", {
+  //           sender: userInfo.id,
+  //           content: undefined,
+  //           recipient: selectedChatData._id,
+  //           messageType: "file",
+  //           fileUrl,
+  //         });
+  //       } else {
+  //         socket.emit("sendGroupMessage", {
+  //           sender: userInfo.id,
+  //           content: undefined,
+  //           messageType: "file",
+  //           fileUrl,
+  //           groupId: selectedChatData._id,
+  //         });
+  //       }
+  //     }
+
+  //     // ❗ clear preview after send
+  //     setPreview(null);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   return (
     <div className="message-bar">
@@ -166,15 +216,43 @@ const SingleChatMessageBar = () => {
         onChange={handleFileAttachmentChange}
       />
       <div className="message-bar-searchbar">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          value={message}
-          ref={messageInputRef}
-          onChange={(e) => setMessage(e.target.value)}
-          className="message-bar-search-input"
-          onKeyDown={handleKeyDown}
-        />
+        {preview ? (
+          <div className="image-preview">
+            <img
+              src={preview}
+              alt="preview"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+            />
+
+            <MdCancel
+              onClick={() => {
+                setPreview(null);
+                setSelectedFile(null);
+
+                // 🔥 IMPORTANT LINE
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }}
+              color="#FF0000"
+            />
+          </div>
+        ) : (
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={message}
+            ref={messageInputRef}
+            onChange={(e) => setMessage(e.target.value)}
+            className="message-bar-search-input"
+            onKeyDown={handleKeyDown}
+          />
+        )}
       </div>
       <div className="message-bar-icon" onClick={handleSendMessage}>
         <IoSend />
