@@ -5,7 +5,7 @@ import {
   deleteForMe,
   deleteForEveryone,
 } from "../controllers/MessagesController.js";
-import { uploadFile } from "../controllers/fileController.js";
+import { uploadFile } from "../controllers/FileController.js";
 import upload from "../config/multer.js";
 
 const messagesRoutes = Router();
